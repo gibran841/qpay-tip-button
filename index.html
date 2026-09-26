@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tip Me ❤️</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      width: 90%;
+      max-width: 450px;
+      background: white;
+      padding: 40px 25px;
+      text-align: center;
+      border-radius: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+      font-size: 17px;
+    }
+
+    input {
+      width: 80%;
+      padding: 15px;
+      margin: 20px 0;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 17px;
+    }
+
+    button {
+      width: 90%;
+      padding: 16px;
+      background: #111;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: .85;
+    }
+
+    .note {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #888;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <div style="font-size:50px;">❤️</div>
+
+    <h1>Tip Me</h1>
+
+    <p>Thank you for your support!</p>
+    <p>Enter the amount you'd like to tip.</p>
+
+    <input
+      id="amount"
+      type="number"
+      min="1"
+      step="0.01"
+      placeholder="Amount in USD"
+    >
+
+    <button onclick="pay()">
+      Tip with Q+Pay
+    </button>
+
+    <div class="note">
+      🔒 Secure payment powered by Q+Pay
+    </div>
+  </div>
+
+  <script>
+    async function pay() {
+      const amount = document.getElementById("amount").value;
+
+      if (!amount || amount <= 0) {
+        alert("Please enter an amount.");
+        return;
+      }
+
+      const response = await fetch("/api/create-invoice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amount: Number(amount)
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        alert("Unable to create payment.");
+      }
+    }
+  </script>
+
+</body>
+</html>
