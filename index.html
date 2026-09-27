@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tip Me ❤️</title>
+  <title>Q+Pay Checkout</title>
 
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #fff7fa;
+      background: #f5f7fa;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -22,27 +22,22 @@
       background: white;
       padding: 40px 25px;
       text-align: center;
-      border-radius: 25px;
+      border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,.08);
     }
 
+    .icon {
+      font-size: 50px;
+    }
+
     h1 {
-      font-size: 42px;
-      margin-bottom: 10px;
+      margin: 15px 0 10px;
     }
 
-    p {
-      color: #666;
-      font-size: 17px;
-    }
-
-    input {
-      width: 80%;
-      padding: 15px;
-      margin: 20px 0;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      font-size: 17px;
+    .price {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 25px 0;
     }
 
     button {
@@ -57,14 +52,15 @@
       cursor: pointer;
     }
 
-    button:hover {
-      opacity: .85;
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
     }
 
     .note {
       margin-top: 20px;
+      color: #777;
       font-size: 14px;
-      color: #888;
     }
   </style>
 </head>
@@ -72,23 +68,20 @@
 <body>
 
   <div class="card">
-    <div style="font-size:50px;">❤️</div>
+    <div class="icon">⚡</div>
 
-    <h1>Tip Me</h1>
+    <h1>Q+Pay Checkout</h1>
 
-    <p>Thank you for your support!</p>
-    <p>Enter the amount you'd like to tip.</p>
+    <p>Purchase access through Q+Pay.</p>
 
-    <input
-      id="amount"
-      type="number"
-      min="1"
-      step="0.01"
-      placeholder="Amount in USD"
-    >
+    <div class="price">
+      100,000,000 QU
+    </div>
 
-    <button onclick="pay()">
-      Tip with Q+Pay
+    <p>Approx. $43 USD</p>
+
+    <button id="payButton" onclick="pay()">
+      Pay with Q+Pay
     </button>
 
     <div class="note">
@@ -98,29 +91,31 @@
 
   <script>
     async function pay() {
-      const amount = document.getElementById("amount").value;
+      const button = document.getElementById("payButton");
 
-      if (!amount || amount <= 0) {
-        alert("Please enter an amount.");
-        return;
-      }
+      button.disabled = true;
+      button.textContent = "Creating invoice...";
 
-      const response = await fetch("/api/create-invoice", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          amount: Number(amount)
-        })
-      });
+      try {
+        const response = await fetch("/api/create-invoice", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else {
-        alert("Unable to create payment.");
+        if (data.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
+        } else {
+          throw new Error(data.error || "Unable to create payment.");
+        }
+
+      } catch (error) {
+        alert(error.message);
+        button.disabled = false;
+        button.textContent = "Pay with Q+Pay";
       }
     }
   </script>
