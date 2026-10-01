@@ -3,51 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Q+Pay Checkout</title>
+  <title>Q+Pay API Checkout</title>
 
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f5f7fa;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
     }
 
     .card {
       width: 90%;
-      max-width: 450px;
+      max-width: 460px;
       background: white;
-      padding: 40px 25px;
-      text-align: center;
+      padding: 32px 25px;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,.08);
     }
 
-    .icon {
-      font-size: 50px;
+    .badge {
+      display: inline-block;
+      background: #eef7ff;
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #1677c8;
+      margin-bottom: 15px;
     }
 
     h1 {
-      margin: 15px 0 10px;
+      margin: 0 0 8px;
+    }
+
+    .description {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .price-box {
+      background: #f7f7f7;
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 20px;
     }
 
     .price {
-      font-size: 28px;
+      font-size: 30px;
       font-weight: bold;
-      margin: 25px 0;
+    }
+
+    .usd {
+      color: #777;
+      margin-top: 5px;
     }
 
     button {
-      width: 90%;
+      width: 100%;
       padding: 16px;
+      border: 0;
+      border-radius: 10px;
       background: #111;
       color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: bold;
       cursor: pointer;
     }
@@ -57,10 +78,35 @@
       cursor: wait;
     }
 
-    .note {
-      margin-top: 20px;
-      color: #777;
+    #payment {
+      display: none;
+      margin-top: 25px;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+
+    .detail {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
       font-size: 14px;
+    }
+
+    .detail span:last-child {
+      font-weight: bold;
+    }
+
+    .success {
+      color: #16834b;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .note {
+      margin-top: 18px;
+      text-align: center;
+      color: #888;
+      font-size: 12px;
     }
   </style>
 </head>
@@ -68,35 +114,64 @@
 <body>
 
   <div class="card">
-    <div class="icon">⚡</div>
 
-    <h1>Q+Pay Checkout</h1>
+    <div class="badge">Q+Pay API Checkout</div>
 
-    <p>Purchase access through Q+Pay.</p>
+    <h1>Purchase Access</h1>
 
-    <div class="price">
-      100,000,000 QU
+    <div class="description">
+      Payment generated through the Q+Pay API.
     </div>
 
-    <p>Approx. $43 USD</p>
+    <div class="price-box">
+      <div class="price">100,000,000 QU</div>
+      <div class="usd">Approx. $43 USD</div>
+    </div>
 
-    <button id="payButton" onclick="pay()">
-      Pay with Q+Pay
+    <button id="createButton" onclick="createPayment()">
+      Continue to Payment
     </button>
 
-    <div class="note">
-      🔒 Secure payment powered by Q+Pay
+    <div id="payment">
+
+      <div class="success">
+        Payment request created
+      </div>
+
+      <div class="detail">
+        <span>Amount</span>
+        <span id="quAmount">-</span>
+      </div>
+
+      <div class="detail">
+        <span>Invoice ID</span>
+        <span id="invoiceId">-</span>
+      </div>
+
+      <button onclick="openPayment()">
+        Pay with Q+Pay
+      </button>
+
     </div>
+
+    <div class="note">
+      Secure payment powered by Q+Pay API
+    </div>
+
   </div>
 
   <script>
-    async function pay() {
-      const button = document.getElementById("payButton");
+    let checkoutUrl = "";
+
+    async function createPayment() {
+
+      const button = document.getElementById("createButton");
 
       button.disabled = true;
-      button.textContent = "Creating invoice...";
+      button.textContent = "Creating payment...";
 
       try {
+
         const response = await fetch("/api/create-invoice", {
           method: "POST",
           headers: {
@@ -106,17 +181,39 @@
 
         const data = await response.json();
 
-        if (data.checkoutUrl) {
-          window.location.href = data.checkoutUrl;
-        } else {
-          throw new Error(data.error || "Unable to create payment.");
+        if (!response.ok) {
+          throw new Error(data.error || "Unable to create payment");
         }
 
+        checkoutUrl = data.checkoutUrl;
+
+        document.getElementById("quAmount").textContent =
+          data.quAmount + " QU";
+
+        document.getElementById("invoiceId").textContent =
+          data.invoiceId;
+
+        document.getElementById("payment").style.display = "block";
+
+        button.style.display = "none";
+
       } catch (error) {
+
         alert(error.message);
+
         button.disabled = false;
-        button.textContent = "Pay with Q+Pay";
+        button.textContent = "Continue to Payment";
       }
+    }
+
+    function openPayment() {
+
+      if (!checkoutUrl) {
+        alert("Payment has not been created yet.");
+        return;
+      }
+
+      window.location.href = checkoutUrl;
     }
   </script>
 
