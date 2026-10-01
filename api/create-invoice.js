@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const usdAmount = 43.00;
+    const usdAmount = 60.00;
 
     const orderId =
       `API-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
